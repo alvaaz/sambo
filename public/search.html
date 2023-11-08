@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Buscar Datos por ID</title>
+  <script>
+    function search() {
+        var id = document.getElementById('searchId').value;
+        var name = document.getElementById('searchName').value;
+        var results = document.getElementById('results');
+        var query = [];
+
+        if (id) {
+          query.push('id=' + encodeURIComponent(id));
+        }
+        if (name) {
+          query.push('name=' + encodeURIComponent(name));
+        }
+
+        fetch('/search?' + query.join('&'))
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('No se encontraron coincidencias');
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Si la búsqueda devuelve más de un resultado, crea una tabla para cada uno
+            results.innerHTML = '';
+            data.forEach(item => createTable(item, results));
+          })
+          .catch(error => {
+            results.textContent = error.message;
+          });
+      }
+    function createTable(data) {
+        var results = document.getElementById('results');
+        results.innerHTML = ''; // Limpia resultados previos
+
+        // Crea la tabla y los elementos thead y tbody
+        var table = document.createElement('table');
+        table.border = "1"; // Para que la tabla tenga bordes, solo para visualización
+        var thead = document.createElement('thead');
+        var tbody = document.createElement('tbody');
+        table.appendChild(thead);
+        table.appendChild(tbody);
+
+        // Crea la fila de encabezado en thead
+        var headerRow = document.createElement('tr');
+        thead.appendChild(headerRow);
+
+        // Crea la fila de datos en tbody
+        var dataRow = document.createElement('tr');
+        tbody.appendChild(dataRow);
+
+        // Asigna nombres a los encabezados basándose en las claves del objeto JSON
+        // y agrega los datos en las celdas correspondientes debajo
+        for (var key in data) {
+          var header = document.createElement('th'); // Elemento para encabezado
+          var dataCell = document.createElement('td'); // Elemento para datos
+
+          // Asigna nombres de encabezado basándose en la clave
+          var headerName = key.replace('__EMPTY', 'Campo').trim(); // Ejemplo: 'Campo', 'Campo 1', 'Campo 2', etc.
+          if (key === 'STOCK') {
+            headerName = 'Stock';
+          }
+          header.textContent = headerName;
+          dataCell.textContent = data[key];
+
+          // Agrega las celdas de encabezado y datos a las filas correspondientes
+          headerRow.appendChild(header);
+          dataRow.appendChild(dataCell);
+        }
+
+        // Agrega la tabla completa al DOM
+        results.appendChild(table);
+      }
+  </script>
+</head>
+<body>
+
+  <h1>Buscar Datos por ID o Nombre</h1>
+  <div>
+    <label for="searchId">ID:</label>
+    <input type="text" id="searchId" name="searchId" />
+    <label for="searchName">Nombre:</label>
+    <input type="text" id="searchName" name="searchName" />
+    <button onclick="search()">Buscar</button>
+  </div>
+  <div id="results"></div>
+
+</body>
+</html>
+
